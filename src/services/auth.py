@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta, UTC
 from typing import Optional
+import pickle
 
 from fastapi import Depends, HTTPException, status
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError, jwt
+import redis
 
 from src.database.db import get_db
 from src.conf.config import settings
@@ -23,6 +25,10 @@ class Hash:
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+
+def get_redis_client():
+    return redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, ex=1800)
 
 
 async def create_access_token(data: dict, expires_delta: Optional[int] = None):
@@ -56,10 +62,17 @@ async def get_current_user(
             raise credentials_exception
     except JWTError as e:
         raise credentials_exception
-    user_service = UserService(db)
-    user = await user_service.get_user_by_username(username)
+
+    redis_client = get_redis_client()
+    user = redis_client.get(f"user:{username}")
     if user is None:
-        raise credentials_exception
+        user_service = UserService(db)
+        user = await user_service.get_user_by_username(username)
+        if user is None:
+            raise credentials_exception
+        redis_client.set(f"user:{username}", pickle.dumps(user), ex=3600)
+    else:
+        user = pickle.loads(user)
     return user
 
 

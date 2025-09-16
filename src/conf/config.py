@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_SECONDS: int = 3600
 
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+
     MAIL_USERNAME: EmailStr = "email@example.com"
     MAIL_PASSWORD: SecretStr = "password"  # type: ignore
     MAIL_FROM: EmailStr = "email@example.com"
