@@ -3,25 +3,25 @@ from pydantic import EmailStr, SecretStr
 
 
 class Settings(BaseSettings):
-    DB_URL: str
-    JWT_SECRET: str
+    DB_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/contacts_db"
+    JWT_SECRET: str = "your_jwt_secret"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_SECONDS: int = 3600
 
-    MAIL_USERNAME: EmailStr
-    MAIL_PASSWORD: SecretStr
-    MAIL_FROM: EmailStr
-    MAIL_PORT: int
-    MAIL_SERVER: str
+    MAIL_USERNAME: EmailStr = "email@example.com"
+    MAIL_PASSWORD: SecretStr = "password"  # type: ignore
+    MAIL_FROM: EmailStr = "email@example.com"
+    MAIL_PORT: int = 587
+    MAIL_SERVER: str = "smtp.example.com"
     MAIL_FROM_NAME: str = "Contacts App"
     MAIL_STARTTLS: bool = False
     MAIL_SSL_TLS: bool = True
     USE_CREDENTIALS: bool = True
     VALIDATE_CERTS: bool = True
 
-    CLOUDINARY_NAME: str
-    CLOUDINARY_API_KEY: int
-    CLOUDINARY_API_SECRET: str
+    CLOUDINARY_NAME: str = "cloud_name"
+    CLOUDINARY_API_KEY: str = "123456789"
+    CLOUDINARY_API_SECRET: str = "cloudinary_api_secret"
 
     model_config = SettingsConfigDict(
         extra="ignore",

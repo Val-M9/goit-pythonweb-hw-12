@@ -5,8 +5,8 @@ from starlette.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from src.middlewares.limiter import limiter
 from src.api import contacts, auth, users
+from src.middlewares.limiter import limiter
 
 
 app = FastAPI()
@@ -40,4 +40,4 @@ app.include_router(users.router, prefix="/api")
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("src.main:app", host="127.0.0.1", port=8000, reload=True)

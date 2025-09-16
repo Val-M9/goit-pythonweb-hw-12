@@ -1,12 +1,18 @@
 from datetime import date, datetime
+import enum
 
-from sqlalchemy import Integer, String, Date, Boolean, func, ForeignKey
+from sqlalchemy import Integer, String, Date, Boolean, func, ForeignKey, Enum
 from sqlalchemy.orm import mapped_column, Mapped, DeclarativeBase, relationship
 from sqlalchemy.sql.sqltypes import DateTime
 
 
 class Base(DeclarativeBase):
     pass
+
+
+class Role(enum.Enum):
+    USER = "user"
+    ADMIN = "admin"
 
 
 class Contact(Base):
@@ -35,3 +41,7 @@ class User(Base):
     avatar: Mapped[str | None] = mapped_column(String(255), nullable=True)
     contacts: Mapped[list["Contact"]] = relationship("Contact", back_populates="user")
     confirmed: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    role: Mapped[Role] = mapped_column(
+        Enum(Role, values_callable=lambda enum_cls: [e.value for e in enum_cls], name="role"),
+        default=Role.USER,
+    )

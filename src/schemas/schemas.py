@@ -2,6 +2,8 @@ from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import date
 from typing import Optional
 
+from src.database.models import Role
+
 
 class ContactModel(BaseModel):
     name: str = Field(max_length=50)
