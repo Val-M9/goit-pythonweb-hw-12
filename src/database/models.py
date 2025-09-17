@@ -1,5 +1,6 @@
 from datetime import date, datetime
 import enum
+from typing import Optional
 
 from sqlalchemy import Integer, String, Date, Boolean, func, ForeignKey, Enum
 from sqlalchemy.orm import mapped_column, Mapped, DeclarativeBase, relationship
@@ -45,3 +46,4 @@ class User(Base):
         Enum(Role, values_callable=lambda enum_cls: [e.value for e in enum_cls], name="role"),
         default=Role.USER,
     )
+    refresh_token: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)

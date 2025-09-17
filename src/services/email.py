@@ -1,11 +1,12 @@
 from pathlib import Path
 
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from fastapi_mail.errors import ConnectionErrors
 from pydantic import EmailStr
 from starlette.datastructures import URL
 
-from src.services.auth import create_email_token
+from src.services.auth import AuthService
 from src.conf.config import settings
 
 conf = ConnectionConfig(
@@ -23,9 +24,10 @@ conf = ConnectionConfig(
 )
 
 
-async def send_email(email: EmailStr, username: str, host: URL):
+async def send_email(email: EmailStr, username: str, host: URL, db=AsyncSession):
     try:
-        token_verification = create_email_token({"sub": email})
+        auth_service = AuthService(db)
+        token_verification = await auth_service.create_email_token(data={"sub": email})
         message = MessageSchema(
             subject="Confirm your email",
             recipients=[email],

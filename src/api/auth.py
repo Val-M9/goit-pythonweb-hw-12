@@ -2,16 +2,27 @@ from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, 
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security import OAuth2PasswordRequestForm
 
-from src.schemas.schemas import UserCreate, Token, User, RequestEmail
-from src.services.auth import create_access_token, Hash, get_email_from_token
+from src.schemas.schemas import (
+    UserCreate,
+    TokenModel,
+    UserModel,
+    RequestEmail,
+    TokenRefreshRequest,
+)
+from src.services.auth import (
+    AuthService,
+    get_auth_service,
+    Hash,
+)
 from src.services.users import UserService
 from src.services.email import send_email
 from src.database.db import get_db
+from src.database.models import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=User, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=UserModel, status_code=status.HTTP_201_CREATED)
 async def register_user(
     user_data: UserCreate,
     background_tasks: BackgroundTasks,
@@ -37,15 +48,17 @@ async def register_user(
     new_user = await user_service.create_user(user_data)
 
     background_tasks.add_task(
-        send_email, new_user.email, new_user.username, request.base_url
+        send_email, new_user.email, new_user.username, request.base_url, db
     )
 
     return new_user
 
 
-@router.post("/login", response_model=Token, status_code=status.HTTP_200_OK)
+@router.post("/login", response_model=TokenModel, status_code=status.HTTP_200_OK)
 async def login_user(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
     user_service = UserService(db)
     user = await user_service.get_user_by_username(form_data.username)
@@ -62,13 +75,22 @@ async def login_user(
             detail="Email is not confirmed",
         )
 
-    access_token = await create_access_token(data={"sub": user.username})
-    return {"access_token": access_token, "token_type": "bearer"}
+    access_token = await auth_service.create_access_token(data={"sub": user.username})
+    refresh_token = await auth_service.create_refresh_token(data={"sub": user.username})
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+    }
 
 
 @router.get("/confirmed_email/{token}")
-async def confirmed_email(token: str, db: AsyncSession = Depends(get_db)):
-    email = await get_email_from_token(token)
+async def confirmed_email(
+    token: str,
+    db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    email = await auth_service.get_email_from_token(token)
     user_service = UserService(db)
     user = await user_service.get_user_by_email(email)
     if user is None:
@@ -98,3 +120,25 @@ async def request_email(
             send_email, user.email, user.username, request.base_url
         )
     return {"message": "Please check your email for confirmation"}
+
+
+@router.post("/refresh-token", response_model=TokenModel)
+async def new_token(
+    request: TokenRefreshRequest,
+    db: AsyncSession = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    user: User | None = await auth_service.verify_refresh_token(request.refresh_token)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token",
+        )
+    new_access_token = await auth_service.create_access_token(
+        data={"sub": user.username}
+    )
+    return {
+        "access_token": new_access_token,
+        "refresh_token": request.refresh_token,
+        "token_type": "bearer",
+    }

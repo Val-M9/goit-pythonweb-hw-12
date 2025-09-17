@@ -33,7 +33,7 @@ class BirthdaysResponse(BaseModel):
     contacts: list[ContactResponse] = []
 
 
-class User(BaseModel):
+class UserModel(BaseModel):
     id: int
     username: str
     email: str
@@ -48,9 +48,14 @@ class UserCreate(BaseModel):
     password: str
 
 
-class Token(BaseModel):
+class TokenModel(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str
+
+
+class TokenRefreshRequest(BaseModel):
+    refresh_token: str
 
 
 class RequestEmail(BaseModel):

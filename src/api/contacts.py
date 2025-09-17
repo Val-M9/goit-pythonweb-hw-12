@@ -10,7 +10,7 @@ from src.schemas.schemas import (
     ContactUpdate,
     BirthdaysResponse,
 )
-from src.services.auth import get_current_user
+from src.services.auth import get_current_user_dependency
 from src.services.contacts import ContactService
 
 
@@ -23,7 +23,7 @@ async def read_contacts(
     limit: int = 50,
     query: Optional[str] = Query(None, description="Search by name, surname or email"),
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_user_dependency),
 ):
     contact_service = ContactService(db)
     contacts = await contact_service.get_contacts(skip, limit, user, query)
@@ -34,7 +34,7 @@ async def read_contacts(
 async def read_contact(
     contact_id: int,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_user_dependency),
 ):
     contact_service = ContactService(db)
     contact = await contact_service.get_contact_by_id(contact_id, user)
@@ -45,7 +45,7 @@ async def read_contact(
 async def create_contact(
     body: ContactModel,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_user_dependency),
 ):
     contact_service = ContactService(db)
     return await contact_service.create_contact(body, user)
@@ -56,7 +56,7 @@ async def update_contact(
     body: ContactUpdate,
     contact_id: int,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_user_dependency),
 ):
     contact_service = ContactService(db)
     contact = await contact_service.update_contact(contact_id, body, user)
@@ -71,7 +71,7 @@ async def update_contact(
 async def remove_contact(
     contact_id: int,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_user_dependency),
 ):
     contact_service = ContactService(db)
     contact = await contact_service.delete_contact(contact_id, user)
@@ -86,7 +86,7 @@ async def remove_contact(
 async def read_contacts_with_upcoming_birthdays(
     days: int = 7,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(get_current_user_dependency),
 ):
     contact_service = ContactService(db)
     contacts = await contact_service.get_contacts_with_upcoming_birthdays(days, user)
