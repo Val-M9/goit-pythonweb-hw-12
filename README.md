@@ -42,10 +42,23 @@ poetry run alembic upgrade head
 
 ### Documentation
 
-```bash
- .\\make.bat html (for windows)
- make html (for linux)  
+Make docs in Windows OS
 
+```bash
+ .\\make.bat html
+```
+
+Make docs in Linux
+
+```bash
+ make html (for linux)
 ```
 
 Generated docs will be in the `docs/_build/html` directory. Entry point for docs would be `docs/_build/html/index.html`.
+
+### Tests
+
+```bash
+poetry run pytest
+```
+

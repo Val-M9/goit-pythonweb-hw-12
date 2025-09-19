@@ -24,6 +24,8 @@ libgravatar = "^1.0.4"
 fastapi-mail = "^1.5.0"
 slowapi = "^0.1.9"
 redis = "^6.4.0"
+pytest = "^8.4.2"
+aiosqlite = "^0.21.0"
 
 
 [tool.poetry.group.dev.dependencies]

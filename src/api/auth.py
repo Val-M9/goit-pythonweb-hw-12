@@ -276,7 +276,15 @@ async def reset_password(
     Returns:
         dict: Success message indicating password was updated
     """
-    email = await auth.get_email_from_reset_token(body.token)
+    try:
+        email = await auth.get_email_from_reset_token(body.token)
+    except Exception:
+        # Invalid or expired reset token
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid reset token",
+        )
+
     hashed = Hash().get_password_hash(body.new_password)
     await UserService(db).repository.update_password_by_email(email, hashed)
     return {"message": "Password updated"}
