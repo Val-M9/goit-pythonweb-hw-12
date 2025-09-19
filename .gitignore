@@ -26,3 +26,8 @@ build/
 storage
 
 postgres-data
+
+# Documentation
+docs/_build/
+docs/_static/
+docs/_templates/

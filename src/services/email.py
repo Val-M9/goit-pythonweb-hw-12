@@ -1,3 +1,15 @@
+"""Email service module.
+
+Module provides email functionality for the application including
+email confirmation and password reset notifications using FastMail.
+
+The module handles:
+- Email configuration and connection setup
+- Email confirmation messages with verification tokens
+- Password reset email notifications
+- HTML email templates with proper headers
+"""
+
 from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,6 +39,17 @@ conf = ConnectionConfig(
 async def send_confirm_email(
     email: EmailStr, username: str, host: URL, db=AsyncSession
 ):
+    """Send email confirmation message to user with a verification token.
+
+    Args:
+        email (EmailStr): Recipient's email address
+        username (str): Username for personalization
+        host (URL): Base URL for constructing verification links
+        db (AsyncSession): Database session for token creation
+
+    Note:
+        Silently handles connection errors to prevent application crashes
+    """
     try:
         auth_service = AuthService(db)
         token_verification = await auth_service.create_email_token(data={"sub": email})
@@ -55,6 +78,18 @@ async def send_confirm_email(
 async def send_password_reset_email(
     email: EmailStr, username: str, host: URL, token: str
 ):
+    """Send password reset email to user with a reset link containing
+    a secure token for password reset verification.
+
+    Args:
+        email (EmailStr): Recipient's email address
+        username (str): Username for personalization
+        host (URL): Base URL for constructing reset links
+        token (str): Secure reset token for verification
+
+    Note:
+        Silently handles connection errors to prevent application crashes
+    """
     try:
         reset_link = f"{str(host).rstrip('/')}/reset?token={token}"
         message = MessageSchema(

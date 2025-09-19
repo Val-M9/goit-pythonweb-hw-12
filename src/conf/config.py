@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     REDIS_PORT: int = 6379
 
     MAIL_USERNAME: EmailStr = "email@example.com"
-    MAIL_PASSWORD: SecretStr = "password"  # type: ignore
+    MAIL_PASSWORD: SecretStr = "password"
     MAIL_FROM: EmailStr = "email@example.com"
     MAIL_PORT: int = 587
     MAIL_SERVER: str = "smtp.example.com"
@@ -34,4 +34,4 @@ class Settings(BaseSettings):
     )
 
 
-settings = Settings()  # type: ignore
+settings = Settings()

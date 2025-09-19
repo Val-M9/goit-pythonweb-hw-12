@@ -1,3 +1,17 @@
+"""Main application module.
+
+This module sets up the FastAPI application with middleware, error handlers,
+and API route registration. It serves as the entry point for the contacts
+management application.
+
+The module configures:
+- FastAPI application instance
+- CORS middleware for cross-origin requests
+- Rate limiting middleware and error handling
+- API route registration for contacts, auth, and users
+- Development server configuration
+"""
+
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,6 +30,15 @@ app.add_middleware(SlowAPIMiddleware)
 
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    """Handle rate limit exceeded exceptions.
+
+    Args:
+        request (Request): The HTTP request that triggered the rate limit
+        exc (RateLimitExceeded): The rate limit exception
+
+    Returns:
+        JSONResponse: 429 status with error message
+    """
     return JSONResponse(
         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
         content={"error": "Request limit exceeded. Try again later"},

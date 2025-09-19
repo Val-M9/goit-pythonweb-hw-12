@@ -39,3 +39,13 @@ Apply migrations:
 ```bash
 poetry run alembic upgrade head
 ```
+
+### Documentation
+
+```bash
+ .\\make.bat html (for windows)
+ make html (for linux)  
+
+```
+
+Generated docs will be in the `docs/_build/html` directory. Entry point for docs would be `docs/_build/html/index.html`.
