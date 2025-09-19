@@ -8,6 +8,8 @@ from src.schemas.schemas import (
     UserModel,
     RequestEmail,
     TokenRefreshRequest,
+    ForgotPasswordBody,
+    ResetPasswordBody,
 )
 from src.services.auth import (
     AuthService,
@@ -15,7 +17,7 @@ from src.services.auth import (
     Hash,
 )
 from src.services.users import UserService
-from src.services.email import send_email
+from src.services.email import send_confirm_email, send_password_reset_email
 from src.database.db import get_db
 from src.database.models import User
 
@@ -48,7 +50,7 @@ async def register_user(
     new_user = await user_service.create_user(user_data)
 
     background_tasks.add_task(
-        send_email, new_user.email, new_user.username, request.base_url, db
+        send_confirm_email, new_user.email, new_user.username, request.base_url, db
     )
 
     return new_user
@@ -117,7 +119,7 @@ async def request_email(
         return {"message": "Email already confirmed"}
     if user:
         background_tasks.add_task(
-            send_email, user.email, user.username, request.base_url
+            send_confirm_email, user.email, user.username, request.base_url
         )
     return {"message": "Please check your email for confirmation"}
 
@@ -142,3 +144,36 @@ async def new_token(
         "refresh_token": request.refresh_token,
         "token_type": "bearer",
     }
+
+
+@router.post("/password/forgot")
+async def forgot_password(
+    body: ForgotPasswordBody,
+    background_tasks: BackgroundTasks,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    auth: AuthService = Depends(get_auth_service),
+):
+    user = await UserService(db).get_user_by_email(body.email)
+    if user:
+        token = auth.create_reset_password_token({"sub": body.email})
+        background_tasks.add_task(
+            send_password_reset_email,
+            user.email,
+            user.username,
+            request.base_url,
+            token,
+        )
+    return {"message": "Reset link was sent"}
+
+
+@router.post("/password/reset")
+async def reset_password(
+    body: ResetPasswordBody,
+    db: AsyncSession = Depends(get_db),
+    auth: AuthService = Depends(get_auth_service),
+):
+    email = await auth.get_email_from_reset_token(body.token)
+    hashed = Hash().get_password_hash(body.new_password)
+    await UserService(db).repository.update_password_by_email(email, hashed)
+    return {"message": "Password updated"}

@@ -6,7 +6,7 @@ from fastapi import Depends, HTTPException, status
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
-from jose import JWTError, jwt
+from jose import JWTError, jwt, ExpiredSignatureError
 import redis
 
 from src.database.db import get_db
@@ -79,7 +79,7 @@ class AuthService:
         self,
         data: dict,
         expires_delta: timedelta,
-        token_type: Literal["access", "refresh", "email"],
+        token_type: Literal["access", "refresh", "email", "reset"],
     ):
         to_encode = data.copy()
         now = datetime.now(UTC)
@@ -119,6 +119,15 @@ class AuthService:
             access_token = self.create_token(data, timedelta(minutes=15), "email")
         return access_token
 
+    def create_reset_password_token(
+        self, data: dict, expires_delta: Optional[timedelta] = None
+    ):
+        if expires_delta:
+            access_token = self.create_token(data, expires_delta, "reset")
+        else:
+            access_token = self.create_token(data, timedelta(minutes=15), "reset")
+        return access_token
+
     async def verify_refresh_token(self, refresh_token: str) -> User | None:
         try:
             payload = jwt.decode(
@@ -129,7 +138,6 @@ class AuthService:
             if username is None or token_type != "refresh":
                 return None
 
-            # Use cached user lookup
             user = await self._get_user_from_cache_or_db(username)
             return user
         except JWTError:
@@ -152,6 +160,29 @@ class AuthService:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="No correct token provided for email check",
+            )
+
+    async def get_email_from_reset_token(self, token: str):
+        try:
+            payload = jwt.decode(
+                token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+            )
+            email: str | None = payload.get("sub")
+            token_type: str | None = payload.get("token_type")
+            if not email or token_type != "reset":
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Token missing subject or invalid token type",
+                )
+            return email
+        except ExpiredSignatureError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
+            )
+        except JWTError:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid check",
             )
 
 

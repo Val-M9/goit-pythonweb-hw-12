@@ -24,7 +24,9 @@ conf = ConnectionConfig(
 )
 
 
-async def send_email(email: EmailStr, username: str, host: URL, db=AsyncSession):
+async def send_confirm_email(
+    email: EmailStr, username: str, host: URL, db=AsyncSession
+):
     try:
         auth_service = AuthService(db)
         token_verification = await auth_service.create_email_token(data={"sub": email})
@@ -37,9 +39,37 @@ async def send_email(email: EmailStr, username: str, host: URL, db=AsyncSession)
                 "token": token_verification,
             },
             subtype=MessageType.html,
+            headers={
+                "List-Unsubscribe": "<mailto:unsubscribe@yourapp.com>",
+                "X-Mailer": "Contacts App",
+                "Reply-To": "no-reply@yourapp.com",
+            },
         )
 
         fm = FastMail(conf)
         await fm.send_message(message, template_name="verify_email.html")
     except ConnectionErrors as err:
         print(err)
+
+
+async def send_password_reset_email(
+    email: EmailStr, username: str, host: URL, token: str
+):
+    try:
+        reset_link = f"{str(host).rstrip('/')}/reset?token={token}"
+        message = MessageSchema(
+            subject="Password Reset Request - Contacts App",
+            recipients=[email],
+            template_body={"username": username, "reset_link": reset_link},
+            subtype=MessageType.html,
+            headers={
+                "List-Unsubscribe": "<mailto:unsubscribe@yourapp.com>",
+                "X-Mailer": "Contacts App",
+                "Reply-To": "no-reply@yourapp.com",
+            },
+        )
+
+        fm = FastMail(conf)
+        await fm.send_message(message, template_name="reset_password_email.html")
+    except ConnectionErrors as err:
+        print(f"Password reset email send failed: {err}")

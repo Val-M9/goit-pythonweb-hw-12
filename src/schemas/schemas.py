@@ -60,3 +60,11 @@ class TokenRefreshRequest(BaseModel):
 
 class RequestEmail(BaseModel):
     email: EmailStr
+
+
+class ForgotPasswordBody(BaseModel):
+    email: EmailStr
+
+class ResetPasswordBody(BaseModel):
+    token: str
+    new_password: str
