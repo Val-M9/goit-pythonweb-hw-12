@@ -37,7 +37,7 @@ class UserModel(BaseModel):
     id: int
     username: str
     email: str
-    avatar: str
+    avatar: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -64,6 +64,7 @@ class RequestEmail(BaseModel):
 
 class ForgotPasswordBody(BaseModel):
     email: EmailStr
+
 
 class ResetPasswordBody(BaseModel):
     token: str
