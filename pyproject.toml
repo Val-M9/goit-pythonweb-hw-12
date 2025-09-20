@@ -26,6 +26,8 @@ slowapi = "^0.1.9"
 redis = "^6.4.0"
 pytest = "^8.4.2"
 aiosqlite = "^0.21.0"
+pytest-cov = "^7.0.0"
+pytest-asyncio = "^1.2.0"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -3,6 +3,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 
 
+
 class TestPasswordReset:
     def test_forgot_password_success(self, client: TestClient, user):
         with patch("src.api.auth.send_password_reset_email") as mock_email:

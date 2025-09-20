@@ -5,7 +5,7 @@ Handles all database interactions for contact CRUD operations and search functio
 """
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, and_, extract
+from sqlalchemy import select, or_
 from datetime import date
 
 from src.database.models import Contact, User
@@ -117,10 +117,11 @@ class ContactRepository:
             Contact | None: Deleted contact data if found and belongs to user, None otherwise
         """
         contact = await self.get_contact_by_id(contact_id, user)
-        if contact:
+        if contact:            
             await self.db.delete(contact)
             await self.db.commit()
-        return contact
+            return contact
+        return None
 
     async def get_contacts_with_upcoming_birthdays(
         self, days: int, user: User

@@ -104,3 +104,21 @@ def unconfirmed_user():
         password = "testpass123"
 
     return _U()
+
+
+# Ensure pytest-anyio uses asyncio backend so trio is not required
+@pytest.fixture
+def anyio_backend():
+    return "asyncio"
+
+
+# Service tests that require a real SQLAlchemy User instance can use this fixture
+@pytest.fixture
+def user_model(user):
+    async def _get():
+        async with TestingAsyncSessionLocal() as session:
+            stmt = select(User).filter_by(id=user.id)
+            result = await session.execute(stmt)
+            return result.scalar_one()
+
+    return anyio.run(_get)
