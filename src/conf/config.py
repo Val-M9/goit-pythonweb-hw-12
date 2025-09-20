@@ -4,6 +4,14 @@ from pydantic import EmailStr, SecretStr
 
 class Settings(BaseSettings):
     DB_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/contacts_db"
+
+    @property
+    def DB_URL(self) -> str:
+        # Convert postgresql:// to postgresql+asyncpg:// for SQLAlchemy async
+        if self.DB_URL.startswith("postgresql://"):
+            return self.DB_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return self.DB_URL
+
     JWT_SECRET: str = "your_jwt_secret"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_SECONDS: int = 3600
