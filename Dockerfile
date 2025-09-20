@@ -4,7 +4,7 @@ ENV APP_HOME=/app
 
 WORKDIR /app
 
-ENV PYTHONPATH=/app/src
+ENV PYTHONPATH=/app
 
 RUN pip install poetry
 
@@ -16,8 +16,6 @@ RUN poetry install --only=main --no-root
 
 COPY . .
 
-WORKDIR /app/src/
-
 EXPOSE 8000
 
-CMD [ "poetry", "run", "python", "main.py"]
+CMD [ "poetry", "run", "python", "src/main.py"]
