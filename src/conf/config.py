@@ -9,11 +9,6 @@ class Settings(BaseSettings):
 
     @property
     def DB_URL(self) -> str:
-        """Convert postgresql:// to postgresql+asyncpg:// for SQLAlchemy async"""
-        if self.DATABASE_URL.startswith("postgresql://"):
-            return self.DATABASE_URL.replace(
-                "postgresql://", "postgresql+asyncpg://", 1
-            )
         return self.DATABASE_URL
 
     JWT_SECRET: str = "your_jwt_secret"
