@@ -90,7 +90,7 @@ class AuthService:
             password=settings.REDIS_PASSWORD,
             ssl=settings.REDIS_SSL,
             ssl_cert_reqs=None if settings.REDIS_SSL else "required",
-            decode_responses=True,
+            decode_responses=False,
         )
 
     async def _get_user_from_cache_or_db(self, username: str) -> User | None:
