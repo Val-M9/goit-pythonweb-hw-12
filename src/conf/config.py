@@ -38,6 +38,25 @@ class Settings(BaseSettings):
                 if parts.hostname and parts.hostname.endswith("neon.tech"):
                     query_pairs.setdefault("ssl", "true")
 
+            # Remove or translate parameters unsupported by asyncpg connect()
+            unsupported = {
+                "channel_binding",
+                "target_session_attrs",
+                "gssencmode",
+                "options",
+                "application_name",
+                "sslmode",
+            }
+            for k in list(query_pairs.keys()):
+                if k in unsupported:
+                    query_pairs.pop(k, None)
+
+            # Map connect_timeout (libpq style) to asyncpg's timeout parameter
+            if "connect_timeout" in query_pairs and "timeout" not in query_pairs:
+                ct = query_pairs.pop("connect_timeout")
+                if ct:
+                    query_pairs["timeout"] = ct
+
             new_query = urlencode(query_pairs, doseq=True)
             url = urlunsplit(
                 (parts.scheme, parts.netloc, parts.path, new_query, parts.fragment)
