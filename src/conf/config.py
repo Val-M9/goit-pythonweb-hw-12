@@ -9,62 +9,7 @@ class Settings(BaseSettings):
 
     @property
     def DB_URL(self) -> str:
-        # Normalize URL for SQLAlchemy async engine with asyncpg
-        url = self.DATABASE_URL
-        # Normalize scheme aliases and ensure asyncpg driver
-        if url.startswith("postgres://"):
-            url = "postgresql://" + url[len("postgres://") :]
-        if url.startswith("postgresql://") and "+asyncpg" not in url:
-            url = "postgresql+asyncpg://" + url[len("postgresql://") :]
-
-        # Convert sslmode to asyncpg-compatible params (ssl)
-        try:
-            from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
-
-            parts = urlsplit(url)
-            query_pairs = dict(parse_qsl(parts.query, keep_blank_values=True))
-            sslmode = query_pairs.get("sslmode")
-            if sslmode:
-                # asyncpg does not accept sslmode; use ssl=true for require/prefer
-                if sslmode.lower() in {"require", "verify-ca", "verify-full", "prefer"}:
-                    query_pairs.pop("sslmode", None)
-                    # set ssl=true only if not explicitly disabled
-                    query_pairs.setdefault("ssl", "true")
-                elif sslmode.lower() in {"disable"}:
-                    query_pairs.pop("sslmode", None)
-                    query_pairs["ssl"] = "false"
-            else:
-                # Neon usually requires SSL; default to ssl=true if host ends with neon.tech
-                if parts.hostname and parts.hostname.endswith("neon.tech"):
-                    query_pairs.setdefault("ssl", "true")
-
-            # Remove or translate parameters unsupported by asyncpg connect()
-            unsupported = {
-                "channel_binding",
-                "target_session_attrs",
-                "gssencmode",
-                "options",
-                "application_name",
-                "sslmode",
-            }
-            for k in list(query_pairs.keys()):
-                if k in unsupported:
-                    query_pairs.pop(k, None)
-
-            # Map connect_timeout (libpq style) to asyncpg's timeout parameter
-            if "connect_timeout" in query_pairs and "timeout" not in query_pairs:
-                ct = query_pairs.pop("connect_timeout")
-                if ct:
-                    query_pairs["timeout"] = ct
-
-            new_query = urlencode(query_pairs, doseq=True)
-            url = urlunsplit(
-                (parts.scheme, parts.netloc, parts.path, new_query, parts.fragment)
-            )
-        except Exception:
-            pass
-
-        return url
+        return self.DATABASE_URL
 
     JWT_SECRET: str = "your_jwt_secret"
     JWT_ALGORITHM: str = "HS256"
