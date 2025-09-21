@@ -17,6 +17,8 @@ class Settings(BaseSettings):
 
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
+    REDIS_PASSWORD: SecretStr | None = None
+    REDIS_SSL: bool = False
 
     MAIL_USERNAME: EmailStr = "email@example.com"
     MAIL_PASSWORD: SecretStr = "password"

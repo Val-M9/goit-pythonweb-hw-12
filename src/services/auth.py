@@ -84,7 +84,14 @@ class AuthService:
         Returns:
             redis.Redis: Configured Redis client instance
         """
-        return redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
+        return redis.Redis(
+            host=settings.REDIS_HOST,
+            port=settings.REDIS_PORT,
+            password=settings.REDIS_PASSWORD,
+            ssl=settings.REDIS_SSL,
+            ssl_cert_reqs=None if settings.REDIS_SSL else "required",
+            decode_responses=True,
+        )
 
     async def _get_user_from_cache_or_db(self, username: str) -> User | None:
         """Get user from Redis cache or database, caching if found in DB"""
