@@ -43,7 +43,6 @@ class Settings(BaseSettings):
                 (parts.scheme, parts.netloc, parts.path, new_query, parts.fragment)
             )
         except Exception:
-            # If parsing fails, just return the best-effort url
             pass
 
         return url
